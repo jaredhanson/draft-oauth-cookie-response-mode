@@ -1,9 +1,8 @@
 ---
-docname: draft-hanson-openid-connect-cookie-response-mode-00
+docname: draft-hanson-oauth-cookie-response-mode-00
 category: std
-ipr: none
 
-title: OpenID Connect Cookie Response Mode
+title: OAuth Cookie Response Mode
 author:
   -
     ins: J. Hanson
@@ -11,11 +10,14 @@ author:
     organization: Okta
     email: jared.hanson@okta.com
 
-workgroup: OpenID Connect Working Group
+area: Security
+workgroup: Web Authorization Protocol
 
 --- abstract
 
-This specification...
+This specification defines a response mode for OAuth 2.0 that uses a cookie to
+issue an access token.  In this mode, the access token is encoded using an HTTP
+Set-Cookie header and transmitted via the the HTTP Cookie header to the client.
 
 --- middle
 
