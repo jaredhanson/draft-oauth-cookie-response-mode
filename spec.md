@@ -17,7 +17,8 @@ workgroup: Web Authorization Protocol
 
 This specification defines a response mode for OAuth 2.0 that uses a cookie to
 issue an access token.  In this mode, the access token is encoded using an HTTP
-Set-Cookie header and transmitted via the the HTTP Cookie header to the client.
+Set-Cookie header and transmitted via the the HTTP Cookie header to the client
+or resource server.
 
 --- middle
 
@@ -60,7 +61,56 @@ in which use of cookies are applicable.
 
 This specification defines a response mode for OAuth 2.0 that uses a cookie to
 issue an access token.  In this mode, the access token is encoded using an HTTP
-Set-Cookie header and transmitted via the the HTTP Cookie header to the client.
+Set-Cookie header and transmitted via the the HTTP Cookie header to the client
+or resource server.
+
+## Notational Conventions
+
+{::boilerplate bcp14}
+
+# Cookie Response Mode
+
+This specification defines the Cookie Response Mode, which is described with its
+response_mode parameter value:
+
+cookie
+: In this mode, the access token parameter of an authorization response is encoded
+in a Set-Cookie HTTP header when responding to the client.
+
+# User-Agent-based Applications
+
+This specification applies to user-agent-based applications, which is a client
+profile defined in Section 2.1 of {{!RFC6749}}.  A user-agent-based application
+is a public client in which the client code is downloaded from a web server and
+executes within a user-agent (e.g., web browser) on the device used by the
+resource owner.  Protocol data and credentials are easily accessible (and often
+visible) to the resource owner.  Since such applications reside within the
+user-agent, they can make seamless use of the user-agent capabilities when
+requesting authorization.
+
+This specification has been designed around the following user-agent-based
+application profiles, representing common architectual patterns for building web
+applications:
+
+multi-page application
+: A multi-page application (MPA) is a user-agent-based application that
+interacts with the user using hypertext, where each interaction triggers
+a request to a server which responds with a new page that is loaded into the
+browser.  A MPA makes use of HTML links, forms, and HTTP redirects.
+
+single-page application
+: A single-page application (SPA) is a user-agent-based application that
+interacts with the user by dynamically rewriting the current page rather than
+loading entire new pages from a server.  A SPA makes use of JavaScript and web
+browser APIs.
+
+hybrid application
+: A hybrid application is a user-agent-based application that interacts with the
+user using both hypertext and dynamic scripting.  A hybrid application makes use
+of both HTML and/or JavaScript within a single page and the entirety of the
+application may span multiple pages.
+
+
 
 ### Roles
 
