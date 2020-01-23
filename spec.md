@@ -32,7 +32,7 @@ resource servers are managed by the same organization.
 The implicit grant defined by OAuth is a flow optimized for clients implemented
 in a browser using a scripting language such as JavaScript.  In this flow, the
 client is issued the access token directly, where, due to the nature of
-browsers, it may be exposed to to other applications with access to the resource
+browsers, it may be exposed to other applications with access to the resource
 owner's user-agent.
 
 Due to this, OAuth does not support issuance of refresh tokens via the implicit
@@ -68,15 +68,6 @@ or resource server.
 
 {::boilerplate bcp14}
 
-# Cookie Response Mode
-
-This specification defines the Cookie Response Mode, which is described with its
-response_mode parameter value:
-
-cookie
-: In this mode, the access token parameter of an authorization response is encoded
-in a Set-Cookie HTTP header when responding to the client.
-
 # User-Agent-based Applications
 
 This specification applies to user-agent-based applications, which is a client
@@ -110,6 +101,53 @@ user using both hypertext and dynamic scripting.  A hybrid application makes use
 of both HTML and/or JavaScript within a single page and the entirety of the
 application may span multiple pages.
 
+# Cookie Response Mode
+
+This specification defines the Cookie Response Mode, which is described with its
+response_mode parameter value:
+
+cookie
+: In this mode, the access token parameter of an authorization response is encoded
+in a Set-Cookie HTTP header when responding to the client.
+
+## Authorization Request
+
+The client constructs the request URI as defined in Section 4.2.1 of
+{{!RFC6749}}, and includes the response_mode extension parameter as defined by
+this specification.
+
+The client directs the resource owner to the constructed URI using an
+HTTP redirection response, or by other means available to it via the user-agent.
+
+For example, the client directs the user-agent to make the following HTTP
+request using TLS (with extra line breaks for display purposes only):
+
+~~~~~~~~~~
+  GET /authorize?response_type=token&client_id=s6BhdRkqt3&state=xyz
+      &redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb
+      &response_mode=cookie HTTP/1.1
+  Host: server.example.com
+~~~~~~~~~~
+
+## Access Token Response
+
+If the resource owner grants the access request, the authorization server issues
+an access token and delivers it to the client by adding a Set-Cookie header field
+containing the access token as a value.  Any additional parameters other than the
+access token are added to the fragment component of the redirection URI as defined
+in Section 4.2.2 of {{!RFC6749}}
+
+For example, the authorization server redirects the user-agent by sending the
+following HTTP response (with extra line breaks for display purposes only):
+
+~~~~~~~~~~
+  HTTP/1.1 302 Found
+  Location: http://example.com/cb#state=xyz&token_type=example
+            &expires_in=3600
+  Set-Cookie: token=2YotnFZFEjr1zCsicMWpAA; Path=/
+~~~~~~~~~~
+
+
 
 
 ### Roles
@@ -125,23 +163,7 @@ like ITP.
 
 Discussion on 2 vs 3 legged?
 
+Discuss cookie attributes like Expires and Path in relation to Resource servers and
+token expiration times.
 
 
-# Example
-
-Something something
-
-~~~~~~~~~~
-  GET /authorize?response_type=token&client_id=s6BhdRkqt3&state=xyz
-      &redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb HTTP/1.1
-  Host: server.example.com
-~~~~~~~~~~
-
-Something something
-
-~~~~~~~~~~
-  HTTP/1.1 302 Found
-  Location: http://example.com/cb#state=xyz&token_type=example
-            &expires_in=3600
-  Set-Cookie: token=2YotnFZFEjr1zCsicMWpAA; Path=/
-~~~~~~~~~~
