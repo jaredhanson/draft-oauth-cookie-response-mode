@@ -132,10 +132,10 @@ request using TLS (with extra line breaks for display purposes only):
 ## Access Token Response
 
 If the resource owner grants the access request, the authorization server issues
-an access token and delivers it to the client by adding a Set-Cookie header field
-containing the access token as a value.  Any additional parameters other than the
-access token are added to the fragment component of the redirection URI as defined
-in Section 4.2.2 of {{!RFC6749}}
+an access token and delivers it to the client by including a Set-Cookie header
+in the redirection response to the client as defined by {{!RFC6265}}.  Any
+additional parameters other than the access token are added to the fragment
+component of the redirection URI as defined in Section 4.2.2 of {{!RFC6749}}.
 
 For example, the authorization server redirects the user-agent by sending the
 following HTTP response (with extra line breaks for display purposes only):
@@ -144,11 +144,8 @@ following HTTP response (with extra line breaks for display purposes only):
   HTTP/1.1 302 Found
   Location: http://example.com/cb#state=xyz&token_type=example
             &expires_in=3600
-  Set-Cookie: token=2YotnFZFEjr1zCsicMWpAA; Path=/
+  Set-Cookie: at=2YotnFZFEjr1zCsicMWpAA; Path=/
 ~~~~~~~~~~
-
-
-
 
 ### Roles
 
