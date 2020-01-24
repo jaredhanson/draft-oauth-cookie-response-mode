@@ -16,8 +16,8 @@ workgroup: Web Authorization Protocol
 --- abstract
 
 This specification defines a response mode for OAuth 2.0 that uses a cookie to
-issue an access token.  In this mode, the access token is encoded using an HTTP
-Set-Cookie header and transmitted via the the HTTP Cookie header to the client
+transmit an access token.  In this mode, the access token is encoded using an
+HTTP Set-Cookie header and transmitted via the HTTP Cookie header to the client
 or resource server.
 
 --- middle
@@ -57,12 +57,12 @@ These concerns are unavoidable, especially in scenarios where delegation is
 granted to third-party clients.  However, first-party scenarios have the ability
 to use cookies, which can be limited in such a way that they aren't exposed to
 JavaScript.  Such limits mitigate various attack vectors, benefiting scenarios
-in which use of cookies are applicable.
+in which use of cookies is applicable.
 
 This specification defines a response mode for OAuth 2.0 that uses a cookie to
-issue an access token.  In this mode, the access token is encoded using an HTTP
-Set-Cookie header and transmitted via the the HTTP Cookie header to the client
-or resource server.
+transmit an access token.  In this mode, the access token is encoded using an
+HTTP Set-Cookie header and transmitted via the the HTTP Cookie header to the
+client or resource server.
 
 ## Notational Conventions
 
@@ -192,7 +192,7 @@ end-user clicks on a link:
 ~~~~~~~~~~
 
 The corresponding HTTP POST request to the same endpoint would be made when the
-end-user submits a form:
+end-user submits a form, for example:
 
 ~~~~~~~~~~
   <form action="https://server.example.com/resource" method="post">

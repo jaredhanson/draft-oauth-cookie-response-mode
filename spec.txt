@@ -1,0 +1,392 @@
+
+
+
+
+Web Authorization Protocol                                     J. Hanson
+Internet-Draft                                                      Okta
+Intended status: Standards Track                        January 23, 2020
+Expires: July 26, 2020
+
+
+                     OAuth 2.0 Cookie Response Mode
+               draft-hanson-oauth-cookie-response-mode-00
+
+Abstract
+
+   This specification defines a response mode for OAuth 2.0 that uses a
+   cookie to transmit an access token.  In this mode, the access token
+   is encoded using an HTTP Set-Cookie header and transmitted via the
+   HTTP Cookie header to the client or resource server.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on July 26, 2020.
+
+Copyright Notice
+
+   Copyright (c) 2020 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
+   (https://trustee.ietf.org/license-info) in effect on the date of
+   publication of this document.  Please review these documents
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Simplified BSD License text as described in Section 4.e of
+   the Trust Legal Provisions and are provided without warranty as
+   described in the Simplified BSD License.
+
+
+
+
+Hanson                    Expires July 26, 2020                 [Page 1]
+
+Internet-Draft       OAuth 2.0 Cookie Response Mode         January 2020
+
+
+1.  Introduction
+
+   OAuth was initially created to allow third-party clients to access
+   protected resources hosted by a resource server, with the approval of
+   the resource owner.  It has proven useful in first-party scenarios as
+   well, where clients and resource servers are managed by the same
+   organization.
+
+   The implicit grant defined by OAuth is a flow optimized for clients
+   implemented in a browser using a scripting language such as
+   JavaScript.  In this flow, the client is issued the access token
+   directly, where, due to the nature of browsers, it may be exposed to
+   other applications with access to the resource owner's user-agent.
+
+   Due to this, OAuth does not support issuance of refresh tokens via
+   the implicit grant, as refresh tokens are typically long-lasting
+   credentials that must be kept confidential and not exposed to
+   unauthorized parties.
+
+   With the increasing adoption of OAuth, new threat models and security
+   best current practices have been identified in
+   [I-D.ietf-oauth-security-topics] and
+   [I-D.ietf-oauth-browser-based-apps].  These new practices recommend
+   the use of authorization code grant by browser-based applications and
+   advise against use of the implicit grant, a significant departure
+   from the initial specification of OAuth.
+
+   The rationale for the shift in guidance is sound, as the implicit
+   grant is susceptible to a number of a attack vectors that aren't
+   applicable to authorization code grant.  However, concerns around
+   exposing tokens to unauthorized parties with access to the user-agent
+   remain, and may be exacerbated if refresh tokens are introduced to an
+   environment in which they were previously forbidden.
+
+   These concerns are unavoidable, especially in scenarios where
+   delegation is granted to third-party clients.  However, first-party
+   scenarios have the ability to use cookies, which can be limited in
+   such a way that they aren't exposed to JavaScript.  Such limits
+   mitigate various attack vectors, benefiting scenarios in which use of
+   cookies is applicable.
+
+   This specification defines a response mode for OAuth 2.0 that uses a
+   cookie to transmit an access token.  In this mode, the access token
+   is encoded using an HTTP Set-Cookie header and transmitted via the
+   the HTTP Cookie header to the client or resource server.
+
+
+
+
+
+
+Hanson                    Expires July 26, 2020                 [Page 2]
+
+Internet-Draft       OAuth 2.0 Cookie Response Mode         January 2020
+
+
+1.1.  Notational Conventions
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in
+   BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+2.  User-Agent-based Applications
+
+   This specification applies to user-agent-based applications, which is
+   a client profile defined in Section 2.1 of [RFC6749].  A user-agent-
+   based application is a public client in which the client code is
+   downloaded from a web server and executes within a user-agent (e.g.,
+   web browser) on the device used by the resource owner.  Protocol data
+   and credentials are easily accessible (and often visible) to the
+   resource owner.  Since such applications reside within the user-
+   agent, they can make seamless use of the user-agent capabilities when
+   requesting authorization.
+
+   This specification has been designed around the following user-agent-
+   based application profiles, representing common architectual patterns
+   for building web applications:
+
+   multi-page application  A multi-page application (MPA) is a user-
+      agent-based application that interacts with the user using
+      hypertext, where each interaction triggers a request to a server
+      which responds with a new page that is loaded into the browser.  A
+      MPA makes use of HTML links, forms, and HTTP redirects.
+
+   single-page application  A single-page application (SPA) is a user-
+      agent-based application that interacts with the user by
+      dynamically rewriting the current page rather than loading entire
+      new pages from a server.  A SPA makes use of JavaScript and web
+      browser APIs.
+
+   hybrid application  A hybrid application is a user-agent-based
+      application that interacts with the user using both hypertext and
+      dynamic scripting.  A hybrid application makes use of both HTML
+      and/or JavaScript within a single page and the entirety of the
+      application may span multiple pages.
+
+3.  Cookie Response Mode
+
+   This specification defines the Cookie Response Mode, which is
+   described with its response_mode parameter value:
+
+
+
+
+
+Hanson                    Expires July 26, 2020                 [Page 3]
+
+Internet-Draft       OAuth 2.0 Cookie Response Mode         January 2020
+
+
+   cookie  In this mode, the access token parameter of an authorization
+      response is encoded in a Set-Cookie HTTP header when responding to
+      the client.
+
+3.1.  Authorization Request
+
+   The client constructs the request URI as defined in Section 4.2.1 of
+   [RFC6749], and includes the response_mode extension parameter as
+   defined by this specification.
+
+   The client directs the resource owner to the constructed URI using an
+   HTTP redirection response, or by other means available to it via the
+   user-agent.
+
+   For example, the client directs the user-agent to make the following
+   HTTP request using TLS (with extra line breaks for display purposes
+   only):
+
+     GET /authorize?response_type=token&client_id=s6BhdRkqt3&state=xyz
+         &redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb
+         &response_mode=cookie HTTP/1.1
+     Host: server.example.com
+
+3.2.  Access Token Response
+
+   If the resource owner grants the access request, the authorization
+   server issues an access token and delivers it to the client by
+   including an HTTP Set-Cookie header in the redirection response to
+   the client as defined by [RFC6265].  Any additional parameters other
+   than the access token are added to the fragment component of the
+   redirection URI as defined in Section 4.2.2 of [RFC6749].
+
+   For example, the authorization server redirects the user-agent by
+   sending the following HTTP response (with extra line breaks for
+   display purposes only):
+
+     HTTP/1.1 302 Found
+     Location: http://example.com/cb#state=xyz&token_type=example
+               &expires_in=3600
+     Set-Cookie: at=2YotnFZFEjr1zCsicMWpAA; Path=/
+
+4.  Accessing Protected Resources
+
+   This specification describes how to use the HTTP state management
+   mechanism defined by [RFC6265] to access protected resources.
+
+
+
+
+
+
+Hanson                    Expires July 26, 2020                 [Page 4]
+
+Internet-Draft       OAuth 2.0 Cookie Response Mode         January 2020
+
+
+4.1.  Bearer Token Usage
+
+   [RFC6750] defines how to use bearer tokens in HTTP requests,
+   primarily using the WWW-Authenticate and Authorization HTTP headers
+   defined by [RFC7235].
+
+   Many user-agent-based applications, particularly multi-page
+   applications, do not make use of the HTTP Authentication framework to
+   authorize access to protected resources.  Instead, these applications
+   use cookies to establish a "session" for subsequent requests to the
+   server.  This section defines a method of sending bearer access
+   tokens in resource requests to resource servers that makes use of the
+   HTTP state management mechanism implemented by the user-agent within
+   which a user-agent-based application is executing.
+
+4.1.1.  Cookie Request Header Field
+
+   When sending the access token using the HTTP state management
+   mechanism, the client uses the "Cookie" request header field to
+   transmit the access token.
+
+   For example:
+
+     GET /resource HTTP/1.1
+     Host: server.example.com
+     Cookie: at=2YotnFZFEjr1zCsicMWpAA
+     Accept: text/html
+
+   This method is implemented by user-agents in such a way that the
+   "Cookie" request header field, and associated access token, are are
+   automatically presented by the client to the resource server,
+   typically without any involvement from the client developer.
+
+   For example, a multi-page application would make the above request
+   when the end-user clicks on a link:
+
+     <a href="https://server.example.com/resource">Resource</a>
+
+   The corresponding HTTP POST request to the same endpoint would be
+   made when the end-user submits a form, for example:
+
+     <form action="https://server.example.com/resource" method="post">
+       <label for="description">Name:</label>
+       <input type="text" id="description" name="description">
+       <button type="submit">Update</button>
+     </form>
+
+
+
+
+
+Hanson                    Expires July 26, 2020                 [Page 5]
+
+Internet-Draft       OAuth 2.0 Cookie Response Mode         January 2020
+
+
+4.2.  Unauthenticated Requests
+
+   If the protected resource request does not include authentication
+   credentials or does not contain an access token that enables access
+   to the protected resource, the resource server MAY include the HTTP
+   "WWW-Authenticate" response header field.
+
+   If the resource server includes the HTTP "WWW-Authenticate" response
+   header field, it SHOULD use the auth-scheme value "Cookie" as defined
+   by [I-D.broyer-http-cookie-auth].
+
+   For example:
+
+     HTTP/1.1 401 Unauthorized
+     WWW-Authenticate: Cookie realm="example"
+                              form-action="/login"
+                              cookie-name=at
+     Content-Type: text/html
+
+     <title>Unauthorized</title>
+     <form action="/login" method="post">
+       <label for="username">Username:</label>
+       <input type="text" id="username" name="username">
+       <label for="password">Password:</label>
+       <input type="password" id="password" name="password">
+       <button type="submit">Sign in</button>
+     </form>
+
+5.  TODO
+
+   Discussion on 2 vs 3 legged?
+
+   Discuss cookie attributes like Expires and Path in relation to
+   Resource servers and token expiration times.
+
+   Works when authorization server and the resource server (and the
+   client?) are the same entity.  - Client may need to be same entity as
+   AS, depending on browser cookie restrictinos like ITP.
+
+6.  Normative References
+
+   [I-D.broyer-http-cookie-auth]
+              Broyer, T., "Cookie-based HTTP Authentication", draft-
+              broyer-http-cookie-auth-00 (work in progress), January
+              2009.
+
+
+
+
+
+
+Hanson                    Expires July 26, 2020                 [Page 6]
+
+Internet-Draft       OAuth 2.0 Cookie Response Mode         January 2020
+
+
+   [I-D.ietf-oauth-browser-based-apps]
+              Parecki, A. and D. Waite, "OAuth 2.0 for Browser-Based
+              Apps", draft-ietf-oauth-browser-based-apps-04 (work in
+              progress), September 2019.
+
+   [I-D.ietf-oauth-security-topics]
+              Lodderstedt, T., Bradley, J., Labunets, A., and D. Fett,
+              "OAuth 2.0 Security Best Current Practice", draft-ietf-
+              oauth-security-topics-13 (work in progress), July 2019.
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/info/rfc2119>.
+
+   [RFC6265]  Barth, A., "HTTP State Management Mechanism", RFC 6265,
+              DOI 10.17487/RFC6265, April 2011,
+              <https://www.rfc-editor.org/info/rfc6265>.
+
+   [RFC6749]  Hardt, D., Ed., "The OAuth 2.0 Authorization Framework",
+              RFC 6749, DOI 10.17487/RFC6749, October 2012,
+              <https://www.rfc-editor.org/info/rfc6749>.
+
+   [RFC6750]  Jones, M. and D. Hardt, "The OAuth 2.0 Authorization
+              Framework: Bearer Token Usage", RFC 6750,
+              DOI 10.17487/RFC6750, October 2012,
+              <https://www.rfc-editor.org/info/rfc6750>.
+
+   [RFC7235]  Fielding, R., Ed. and J. Reschke, Ed., "Hypertext Transfer
+              Protocol (HTTP/1.1): Authentication", RFC 7235,
+              DOI 10.17487/RFC7235, June 2014,
+              <https://www.rfc-editor.org/info/rfc7235>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/info/rfc8174>.
+
+Author's Address
+
+   Jared Hanson
+   Okta
+
+   Email: jared.hanson@okta.com
+
+
+
+
+
+
+
+
+Hanson                    Expires July 26, 2020                 [Page 7]
