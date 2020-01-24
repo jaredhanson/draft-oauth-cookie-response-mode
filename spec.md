@@ -132,9 +132,9 @@ request using TLS (with extra line breaks for display purposes only):
 ## Access Token Response
 
 If the resource owner grants the access request, the authorization server issues
-an access token and delivers it to the client by including a Set-Cookie header
-in the redirection response to the client as defined by {{!RFC6265}}.  Any
-additional parameters other than the access token are added to the fragment
+an access token and delivers it to the client by including an HTTP Set-Cookie
+header in the redirection response to the client as defined by {{!RFC6265}}.
+Any additional parameters other than the access token are added to the fragment
 component of the redirection URI as defined in Section 4.2.2 of {{!RFC6749}}.
 
 For example, the authorization server redirects the user-agent by sending the
@@ -147,20 +147,100 @@ following HTTP response (with extra line breaks for display purposes only):
   Set-Cookie: at=2YotnFZFEjr1zCsicMWpAA; Path=/
 ~~~~~~~~~~
 
-### Roles
+# Accessing Protected Resources
 
-Works when authorization server and the resource server (and the client?) are
-the same entity.
+This specification describes how to use the HTTP state management mechanism
+defined by {{!RFC6265}} to access protected resources.
 
-Client may need to be same entity as AS, depending on browser cookie restrictinos
-like ITP.
+## Bearer Token Usage
+
+{{!RFC6750}} defines how to use bearer tokens in HTTP requests, primarily using
+the WWW-Authenticate and Authorization HTTP headers defined by {{!RFC7235}}.
+
+Many user-agent-based applications, particularly multi-page applications, do not
+make use of the HTTP Authentication framework to authorize access to protected
+resources.  Instead, these applications use cookies to establish a "session" for
+subsequent requests to the server.  This section defines a method of sending
+bearer access tokens in resource requests to resource servers that makes use of
+the HTTP state management mechanism implemented by the user-agent within which a
+user-agent-based application is executing.
+
+### Cookie Request Header Field
+
+When sending the access token using the HTTP state management mechanism, the
+client uses the "Cookie" request header field to transmit the access token.
+
+For example:
+
+~~~~~~~~~~
+  GET /resource HTTP/1.1
+  Host: server.example.com
+  Cookie: at=2YotnFZFEjr1zCsicMWpAA
+  Accept: text/html
+~~~~~~~~~~
+
+This method is implemented by user-agents in such a way that the "Cookie"
+request header field, and associated access token, are are automatically
+presented by the client to the resource server, typically without any
+involvement from the client developer.
+
+For example, a multi-page application would make the above request when the
+end-user clicks on a link:
+
+~~~~~~~~~~
+  <a href="https://server.example.com/resource">Resource</a>
+~~~~~~~~~~
+
+The corresponding HTTP POST request to the same endpoint would be made when the
+end-user submits a form:
+
+~~~~~~~~~~
+  <form action="https://server.example.com/resource" method="post">
+    <label for="description">Name:</label>
+    <input type="text" id="description" name="description">
+    <button type="submit">Update</button>
+  </form>
+~~~~~~~~~~
+
+## Unauthenticated Requests
+
+If the protected resource request does not include authentication credentials or
+does not contain an access token that enables access to the protected resource,
+the resource server MAY include the HTTP "WWW-Authenticate" response header
+field.
+
+If the resource server includes the HTTP "WWW-Authenticate" response header
+field, it SHOULD use the auth-scheme value "Cookie" as defined by
+{{!I-D.broyer-http-cookie-auth}}.
+
+For example:
+
+~~~~~~~~~~
+  HTTP/1.1 401 Unauthorized
+  WWW-Authenticate: Cookie realm="example"
+                           form-action="/login"
+                           cookie-name=at
+  Content-Type: text/html
+  
+  <title>Unauthorized</title>
+  <form action="/login" method="post">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username">
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password">
+    <button type="submit">Sign in</button>
+  </form>
+~~~~~~~~~~
 
 
-# Notes
+# TODO
 
 Discussion on 2 vs 3 legged?
 
 Discuss cookie attributes like Expires and Path in relation to Resource servers and
 token expiration times.
 
-
+Works when authorization server and the resource server (and the client?) are
+the same entity.
+- Client may need to be same entity as AS, depending on browser cookie restrictinos
+like ITP.
